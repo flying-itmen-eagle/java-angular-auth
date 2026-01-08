@@ -1,18 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 
-import { UserList } from './user-list';
+// 手動宣告 jasmine 以解決 IDE 找不到型別定義的紅字問題
+declare var jasmine: any;
 
-describe('UserList', () => {
-  let component: UserList;
-  let fixture: ComponentFixture<UserList>;
+import { UserListComponent } from './user-list';
+import { UserService } from '../services/user.service';
+
+describe('UserListComponent', () => {
+  let component: UserListComponent;
+  let fixture: ComponentFixture<UserListComponent>;
 
   beforeEach(async () => {
+    // 建立 UserService 的 Mock 物件，避免測試時需要真實的 HTTP 請求
+    const userServiceSpy = jasmine.createSpyObj('UserService', ['getUsers', 'deleteUser']);
+    userServiceSpy.getUsers.and.returnValue(of([]));
+
     await TestBed.configureTestingModule({
-      imports: [UserList]
+      imports: [UserListComponent],
+      providers: [{ provide: UserService, useValue: userServiceSpy }]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(UserList);
+    fixture = TestBed.createComponent(UserListComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
