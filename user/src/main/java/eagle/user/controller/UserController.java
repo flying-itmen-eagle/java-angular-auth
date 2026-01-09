@@ -2,6 +2,7 @@ package eagle.user.controller;
 
 import eagle.user.model.User;
 import eagle.user.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,9 +12,11 @@ import java.util.List;
 public class UserController {
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserRepository repository) {
+    public UserController(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // 取得所有使用者
@@ -25,6 +28,8 @@ public class UserController {
     // 新增使用者
     @PostMapping
     public User create(@RequestBody User user) {
+        // 加密密碼
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return repository.save(user);
     }
 
@@ -39,7 +44,10 @@ public class UserController {
     public User update(@PathVariable Long id, @RequestBody User user) {
         User existing = repository.findById(id).orElseThrow();
         existing.setUserName(user.getUserName());
-        existing.setPassword(user.getPassword());
+        // 如果有傳入新密碼，才進行更新並加密
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            existing.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         existing.setEmail(user.getEmail());
         return repository.save(existing);
     }
@@ -50,4 +58,3 @@ public class UserController {
         repository.deleteById(id);
     }
 }
-
